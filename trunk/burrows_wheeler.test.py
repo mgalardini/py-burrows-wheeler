@@ -5,8 +5,9 @@ from tools_burrows_wheeler import BWT
 import tools_karkkainen_sanders as tks
 import time
 
-s  = 'a'*10000
-s += '$'
+s = 'mississippi$'
+#s  = 'a'*10000
+#s += '$'
 su = unicode(s,'utf-8','replace')
 
 ##
@@ -41,17 +42,18 @@ time_prepare_search2 = time.time() - start_prepare_search2
 # - bwt.search2(pattern) : compute the frequency of pattern in s using small index
 ##
 
-pattern = 'a'*300
+#pattern = 'a'*300
+pattern = 'ss'
 
 start_search1 = time.time()
-count1 = bwt.search1(pattern)
-print count1
+locate1 = bwt.locate1(pattern)
 time_search1 = time.time() - start_search1
+print 'method 1 : pattern "%s" in "%s" at the offsets %s'%(pattern, s, locate1)
 
 start_search2 = time.time()
-count2 = bwt.search2(pattern)
-print count2
+locate2 = bwt.locate2(pattern)
 time_search2 = time.time() - start_search2
+print 'method 2 : pattern "%s" in "%s" at the offsets %s'%(pattern, s, locate2)
 
 print 'method 1 : index construction %s, count %s'%(time_prepare_search1, time_search1)
 print 'method 2 : index construction %s, count %s'%(time_prepare_search2, time_search2)

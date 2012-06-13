@@ -60,6 +60,13 @@ class BWT :
       i = self.c[k] + self.occ[i] - 1
       j -= 1
     return t
+
+  def get_occ1(self, alpha, rank) :
+    return self.dic_occ[alpha][rank]
+  
+  def get_occ2(self, alpha, rank) :
+    l = self.small_dic_occ[alpha]
+    return dicho_find(l,rank)
     
   def prepare_search1(self) :
     dic_occ = {}
@@ -75,36 +82,13 @@ class BWT :
       self.dic_occ[a] = l
       self.dic_occ[a].append(l[-1])
     
-  def search1(self,pattern) :
-    if self.dic_occ == {} :
-      self.prepare_search1()
-    i = len(pattern) - 1
-    a = 1
-    b = self.n
-    while a <= b and i >= 0 :
-      k = pattern[i]
-      if k not in self.c :
-        return 0
-      a = self.c[k] + self.dic_occ[k][a-1] +1
-      b = self.c[k] + self.dic_occ[k][b]
-      i -= 1
-    if b < a :
-      return 0
-    return b-a+1
 
   def prepare_search2(self) :
     self.small_dic_occ = dict((a,[]) for a in self.n_alpha.keys())
     for i,l in enumerate(self.bwt) :
       self.small_dic_occ[l].append(i)
-    
-  def get_occ(self, k, a) :
-    l = self.small_dic_occ[k]
-    res = dicho_find(l,a)
-    return res
 
-  def search2(self, pattern) :
-    if self.small_dic_occ == {} :
-      self.prepare_search2()
+  def locate(self, pattern, method_get_occ) :
     i = len(pattern) - 1
     a = 1
     b = self.n
@@ -112,12 +96,40 @@ class BWT :
       k = pattern[i]
       if k not in self.c :
         return 0
-      a = self.c[k] + self.get_occ(k,a-1)+1
-      b = self.c[k] + self.get_occ(k,b)
+      a = self.c[k] + method_get_occ(k,a-1) + 1
+      b = self.c[k] + method_get_occ(k,b)
       i -= 1
     if b < a :
+      return []
+    return [a,b]#b-a+1
+
+  def locate1(self,pattern) :
+    if self.dic_occ == {} :  
+      self.prepare_search1()
+    res = self.locate(pattern, self.get_occ1)
+    return [self.sa[i] for i in xrange(res[0]-1,res[1])]
+
+  def locate2(self,pattern) :
+    if self.small_dic_occ == {} :  
+      self.prepare_search2()
+    res = self.locate(pattern, self.get_occ2)
+    return [self.sa[i] for i in xrange(res[0]-1,res[1])]
+
+  def search1(self,pattern) :
+    if self.dic_occ == {} :  
+      self.prepare_search1()
+    res = self.locate(pattern, self.get_occ1)
+    if res == [] :
       return 0
-    return b-a+1
+    return res[1] - res[0] + 1
+
+  def search2(self, pattern) :
+    if self.small_dic_occ == {} :
+      self.prepare_search2()
+    res = self.locate(pattern, self.get_occ2)
+    if res == [] :
+      return 0
+    return res[1] - res[0] + 1
 
   def print_sa(self) :
     res = [self.s[i] for i in self.sa[:self.n]]
