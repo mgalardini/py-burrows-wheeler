@@ -21,6 +21,8 @@ bwt = BWT(su)
 time_init = time.time() - start_init
 
 print 'init : %s'%(time_init)
+print 'BWT : %s'%(bwt.bwt)
+print 'SA : %s'%(bwt.sa)
 
 ##
 # construction of indexes
@@ -38,12 +40,12 @@ time_prepare_search2 = time.time() - start_prepare_search2
 
 ##
 # search in s :
-# - bwt.search1(pattern) : compute the frequency of pattern in s using huge index
-# - bwt.search2(pattern) : compute the frequency of pattern in s using small index
+# - bwt.locate1(pattern) : locate pattern in s using huge index
+# - bwt.locate2(pattern) : locate pattern in s using small index
 ##
 
 #pattern = 'a'*300
-pattern = 'ss'
+pattern = 'pi'
 
 start_search1 = time.time()
 locate1 = bwt.locate1(pattern)
@@ -55,5 +57,5 @@ locate2 = bwt.locate2(pattern)
 time_search2 = time.time() - start_search2
 print 'method 2 : pattern "%s" in "%s" at the offsets %s'%(pattern, s, locate2)
 
-print 'method 1 : index construction %s, count %s'%(time_prepare_search1, time_search1)
-print 'method 2 : index construction %s, count %s'%(time_prepare_search2, time_search2)
+print 'time method 1 : index construction %s, locate %s'%(time_prepare_search1, time_search1)
+print 'time method 2 : index construction %s, locate %s'%(time_prepare_search2, time_search2)

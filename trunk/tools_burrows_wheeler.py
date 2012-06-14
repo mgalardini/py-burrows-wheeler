@@ -16,21 +16,37 @@ def dicho_find(l, val) :
   while start <= end:
     mid = int(start + ((end-start)/2))
     if(l[mid] == val) :
-      break
+      return mid
     elif val > l[mid] :
       start = mid + 1
     else :
       end = mid - 1
+  if val > l[mid] :
+    return mid+1
 
   return mid
 
 class BWT :
+
+  joker_symbol = unicode('?','utf-8')
+
   def __init__(self, s) :
     self.s = s
     self.n = len(s)
-    _,self.sa = tks.simple_kark_sort(s)
+    _,sa = tks.simple_kark_sort(s)
+    self.sa = sa[:self.n]
 #    self.lcp = tks.LCP(s,self.sa)
     self.bwt = ''.join([s[self.sa[i]-1] for i in xrange(self.n)])
+    self.init_bwt()
+    self.init_isa()
+
+  def init_isa(self) :
+    self.isa = [0]*self.n
+    for i in xrange(self.n) :
+      self.isa[self.sa[i]] = i
+#    print self.isa
+
+  def init_bwt(self) :
     self.n_alpha = {}
     self.occ = array('i',[0]*(self.n))
     self.dic_occ = {}
@@ -48,7 +64,6 @@ class BWT :
       self.c[l] = previous
       previous += self.n_alpha[l]
 
-
   def reverse_bwt(self) :
     i = 0
     j = self.n
@@ -60,6 +75,12 @@ class BWT :
       i = self.c[k] + self.occ[i] - 1
       j -= 1
     return t
+
+  def get_previous(self, offset, deep) :
+    i = offset-deep
+    if i < 0 :
+      i = self.n+i
+    return i
 
   def get_occ1(self, alpha, rank) :
     return self.dic_occ[alpha][rank]
@@ -88,6 +109,40 @@ class BWT :
     for i,l in enumerate(self.bwt) :
       self.small_dic_occ[l].append(i)
 
+  def locate_joker_test(self, pattern) :
+    if self.dic_occ == {} :  
+      self.prepare_search1()
+    res = self.locate_joker(pattern, self.get_occ1)
+#    return [self.sa[i] for i in xrange(res[0]-1,res[1])]
+
+  def locate_joker_aux(self, pattern, method_get_occ, a, b, i) :
+    k = pattern[i]
+    res = {}
+    for j in xrange(a-1,b) :
+      car = self.bwt[j]
+      if car not in res :
+        res[car] = []
+      res[car].append(j)
+
+
+  def locate_joker(self, pattern, method_get_occ) :
+    i = len(pattern) - 1
+    a = 1
+    b = self.n
+    while a <= b and i >= 0 :
+      k = pattern[i]
+      if k == self.joker_symbol :
+        self.locate_joker_aux(pattern, method_get_occ, a, b, i)
+        pass
+      elif k not in self.c :
+        return 0
+      a = self.c[k] + method_get_occ(k,a-1) + 1
+      b = self.c[k] + method_get_occ(k,b)
+      i -= 1
+    if b < a :
+      return []
+    return [a,b]#b-a+1
+
   def locate(self, pattern, method_get_occ) :
     i = len(pattern) - 1
     a = 1
@@ -95,12 +150,10 @@ class BWT :
     while a <= b and i >= 0 :
       k = pattern[i]
       if k not in self.c :
-        return 0
+        return [b,a]
       a = self.c[k] + method_get_occ(k,a-1) + 1
       b = self.c[k] + method_get_occ(k,b)
       i -= 1
-    if b < a :
-      return []
     return [a,b]#b-a+1
 
   def locate1(self,pattern) :
@@ -115,7 +168,7 @@ class BWT :
     res = self.locate(pattern, self.get_occ2)
     return [self.sa[i] for i in xrange(res[0]-1,res[1])]
 
-  def search1(self,pattern) :
+  def OLD_search1(self,pattern) :
     if self.dic_occ == {} :  
       self.prepare_search1()
     res = self.locate(pattern, self.get_occ1)
@@ -123,7 +176,7 @@ class BWT :
       return 0
     return res[1] - res[0] + 1
 
-  def search2(self, pattern) :
+  def OLD_search2(self, pattern) :
     if self.small_dic_occ == {} :
       self.prepare_search2()
     res = self.locate(pattern, self.get_occ2)
